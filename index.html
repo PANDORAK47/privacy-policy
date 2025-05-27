@@ -3,62 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>개인정보보호정책</title>
+    <title>개인정보보호정책 - GPTs API 서비스</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        h1 { color: #333; }
-        h2 { color: #666; margin-top: 30px; }
-        p { line-height: 1.6; color: #555; }
-        .highlight { background-color: #f0f8ff; padding: 10px; border-left: 4px solid #0066cc; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 { 
+            color: #2c3e50; 
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 { 
+            color: #34495e; 
+            margin-top: 30px; 
+            margin-bottom: 15px;
+        }
+        p { 
+            line-height: 1.7; 
+            color: #555; 
+            margin-bottom: 15px;
+        }
+        .highlight { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px; 
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        ul { 
+            padding-left: 20px; 
+        }
+        li { 
+            margin-bottom: 8px; 
+        }
+        .contact-info {
+            background-color: #e8f5e8;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #888;
+            font-size: 14px;
+        }
+        strong { color: #2c3e50; }
     </style>
 </head>
 <body>
-    <h1>개인정보보호정책</h1>
+    <h1>🔒 개인정보보호정책</h1>
     
     <div class="highlight">
-        <p><strong>최종 수정일:</strong> 2025년 5월 27일</p>
+        <h3 style="margin-top: 0; color: white;">📋 정책 개요</h3>
+        <p style="margin-bottom: 0; color: white;">
+            <strong>최종 수정일:</strong> 2025년 5월 27일<br>
+            <strong>시행일:</strong> 2025년 5월 27일<br>
+            <strong>정책 버전:</strong> v1.0
+        </p>
+    </div>
+
+    <div class="info-box">
+        <p><strong>📌 중요 안내:</strong> 본 서비스는 GPTs(ChatGPT 플러그인) 기능 제공 목적으로 운영되며, 
+        최소한의 개인정보만을 처리합니다.</p>
     </div>
 
     <h2>1. 개인정보 수집 및 이용</h2>
-    <p>본 서비스는 GPTs 기능 제공을 위해 최소한의 정보만을 처리합니다.</p>
+    <p>본 서비스는 다음과 같은 개인정보를 수집·이용합니다:</p>
     
     <ul>
-        <li><strong>수집 항목:</strong> 서비스 이용 기록, IP 주소</li>
-        <li><strong>수집 목적:</strong> API 서비스 제공 및 성능 개선</li>
-        <li><strong>보유 기간:</strong> 서비스 제공 기간 또는 법정 보관 기간</li>
+        <li><strong>수집 항목:</strong> 
+            <ul>
+                <li>서비스 이용 기록 (API 호출 로그)</li>
+                <li>접속 IP 주소</li> 
+                <li>접속 시간</li>
+                <li>사용한 기능 정보</li>
+            </ul>
+        </li>
+        <li><strong>수집 목적:</strong> 
+            <ul>
+                <li>API 서비스 제공 및 품질 향상</li>
+                <li>서비스 장애 대응 및 보안 강화</li>
+                <li>통계 분석 및 서비스 개선</li>
+            </ul>
+        </li>
+        <li><strong>수집 방법:</strong> 자동 수집 (서버 로그)</li>
+        <li><strong>보유 기간:</strong> 서비스 제공 기간 또는 관련 법령에 따른 보관 기간</li>
     </ul>
 
     <h2>2. 개인정보 제3자 제공</h2>
-    <p>수집된 개인정보는 원칙적으로 제3자에게 제공하지 않습니다.</p>
+    <p>수집된 개인정보는 <strong>원칙적으로 제3자에게 제공하지 않습니다.</strong></p>
+    <p>다만, 다음의 경우에는 예외적으로 제공할 수 있습니다:</p>
+    <ul>
+        <li>법령에 의한 요구가 있는 경우</li>
+        <li>수사 목적으로 법정절차에 의한 요구가 있는 경우</li>
+        <li>이용자의 사전 동의가 있는 경우</li>
+    </ul>
 
     <h2>3. 개인정보 처리 위탁</h2>
     <p>안정적인 서비스 제공을 위해 다음 업체에 개인정보 처리를 위탁합니다:</p>
-    <ul>
-        <li>Vercel Inc. (서버 호스팅)</li>
-        <li>OpenAI (GPTs 플랫폼)</li>
-    </ul>
+    
+    <div class="info-box">
+        <h4>위탁업체 현황</h4>
+        <ul>
+            <li><strong>Vercel Inc.</strong> - 서버 호스팅 및 데이터 처리</li>
+            <li><strong>OpenAI</strong> - GPTs 플랫폼 서비스</li>
+            <li><strong>GitHub Inc.</strong> - 소스코드 관리 (선택적)</li>
+        </ul>
+        <p><small>※ 위탁업체는 개인정보보호법에 따라 안전하게 개인정보를 처리합니다.</small></p>
+    </div>
 
     <h2>4. 이용자의 권리</h2>
-    <p>이용자는 다음과 같은 권리를 가집니다:</p>
+    <p>개인정보 주체인 이용자는 다음과 같은 권리를 가집니다:</p>
     <ul>
-        <li>개인정보 처리 현황 확인 요구</li>
+        <li>개인정보 처리 현황 확인 및 열람 요구</li>
         <li>개인정보 수정·삭제 요구</li>
-        <li>개인정보 처리 정지 요구</li>
+        <li>개인정보 처리 정지 요구</li> 
+        <li>손해배상 청구</li>
+    </ul>
+    
+    <p>위 권리 행사를 원하시는 경우 아래 연락처로 문의해 주세요.</p>
+
+    <h2>5. 개인정보 보호조치</h2>
+    <ul>
+        <li>개인정보 암호화 저장 및 전송</li>
+        <li>접근권한 관리 및 접근통제 시스템 운영</li>
+        <li>개인정보 처리시스템 접근기록 보관</li>
+        <li>정기적인 보안 점검 실시</li>
     </ul>
 
-    <h2>5. 개인정보보호책임자</h2>
-    <p>
-        <strong>이름:</strong> 개인정보보호책임자<br>
-        <strong>연락처:</strong> privacy@yourcompany.com<br>
-        <strong>처리방침 변경:</strong> 본 정책이 변경될 경우 웹사이트를 통해 공지합니다.
-    </p>
+    <h2>6. 쿠키(Cookie) 사용</h2>
+    <p>본 서비스는 쿠키를 사용하지 않습니다. 다만, 연결된 외부 서비스(GPTs, Vercel 등)에서는 
+    자체 쿠키 정책을 적용할 수 있습니다.</p>
 
-    <h2>6. 기타</h2>
-    <p>본 개인정보보호정책은 「개인정보보호법」, 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」 등 관련 법령에 따라 작성되었습니다.</p>
+    <div class="contact-info">
+        <h2 style="margin-top: 0;">📞 개인정보보호책임자</h2>
+        <p>
+            <strong>성명:</strong> 개인정보보호책임자<br>
+            <strong>연락처:</strong> privacy@yourcompany.com<br>
+            <strong>처리방침 변경 공지:</strong> 본 웹사이트 게시를 통해 7일 전 사전 공지<br>
+            <strong>민원 처리:</strong> 접수 후 3일 이내 답변
+        </p>
+    </div>
 
-    <hr style="margin: 40px 0;">
-    <p style="text-align: center; color: #888; font-size: 14px;">
-        본 정책에 대한 문의사항이 있으시면 위 연락처로 문의해 주세요.
-    </p>
+    <h2>7. 기타 사항</h2>
+    <ul>
+        <li>본 개인정보보호정책은 「개인정보보호법」, 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」 등 
+        관련 법령에 따라 작성되었습니다.</li>
+        <li>개인정보보호정책의 내용 추가, 삭제 및 수정이 있을 시에는 개정 최소 7일 전부터 
+        웹사이트의 공지사항을 통하여 고지합니다.</li>
+        <li>본 정책은 시행일로부터 적용됩니다.</li>
+    </ul>
+
+    <div class="footer">
+        <p>
+            <strong>📧 문의:</strong> privacy@yourcompany.com<br>
+            <strong>🌐 서비스:</strong> GPTs API Integration Service<br>
+            <strong>📅 정책 시행일:</strong> 2025년 5월 27일
+        </p>
+        <p style="margin-top: 20px;">
+            본 개인정보보호정책에 대한 의견이나 문의사항이 있으시면 언제든지 위 연락처로 문의해 주시기 바랍니다.
+        </p>
+    </div>
 </body>
 </html>
