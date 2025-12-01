@@ -4,8 +4,11 @@
       "command": "npx",
       "args": [
         "-y",
-        "google-sheets-mcp"
-      ]
+        "mcp-gsheets@latest"
+      ],
+      "env": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "/home/user/.config/google-sheets-mcp/service-account-key.json"
+      }
     }
   }
 }
