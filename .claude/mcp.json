@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "google-sheets": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "google-sheets-mcp"
+      ]
+    }
+  }
+}
