@@ -54,6 +54,23 @@ class Settings:
     qf_pesticide: str = os.getenv("MFDS_PESTICIDE_QUERY_FIELD", "PRES_NM")
     qf_recall: str = os.getenv("MFDS_RECALL_QUERY_FIELD", "PRDLST_NM")
 
+    # --- 공공데이터포털(data.go.kr) REST (옵션 B, 권장) ---
+    # 원료 등 일부 조회는 식품안전나라가 아니라 공공데이터포털 REST(serviceKey 인증,
+    # items[]/data[] 응답)로 제공된다. 아래 *_DATAGO_URL 을 채우면 그 조회는
+    # 식품안전나라 대신 data.go.kr REST 를 사용한다(없으면 식품안전나라 → MOCK 순서).
+    #   예) https://apis.data.go.kr/1471000/<서비스>/<오퍼레이션>
+    #       https://api.odcloud.kr/api/15111777/v1/uddi:<uuid>
+    data_go_kr_api_key: str | None = os.getenv("DATA_GO_KR_API_KEY")
+    dg_ingredient_url: str = os.getenv("INGREDIENT_DATAGO_URL", "")
+    dg_additive_url: str = os.getenv("ADDITIVE_DATAGO_URL", "")
+    dg_pesticide_url: str = os.getenv("PESTICIDE_DATAGO_URL", "")
+    dg_recall_url: str = os.getenv("RECALL_DATAGO_URL", "")
+    # data.go.kr 검색 요청변수명(미지정 시 식품안전나라용 후보를 그대로 사용).
+    dg_ingredient_qf: str = os.getenv("INGREDIENT_DATAGO_QUERY_FIELD", os.getenv("MFDS_INGREDIENT_QUERY_FIELD", "PRDLST_NM"))
+    dg_additive_qf: str = os.getenv("ADDITIVE_DATAGO_QUERY_FIELD", os.getenv("MFDS_ADDITIVE_QUERY_FIELD", "NM"))
+    dg_pesticide_qf: str = os.getenv("PESTICIDE_DATAGO_QUERY_FIELD", os.getenv("MFDS_PESTICIDE_QUERY_FIELD", "PRES_NM"))
+    dg_recall_qf: str = os.getenv("RECALL_DATAGO_QUERY_FIELD", os.getenv("MFDS_RECALL_QUERY_FIELD", "PRDLST_NM"))
+
     @property
     def force_mock(self) -> bool:
         return _env_bool("USE_MOCK")

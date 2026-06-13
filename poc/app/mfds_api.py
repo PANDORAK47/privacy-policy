@@ -1,11 +1,17 @@
-"""공공데이터(식품안전나라 OpenAPI) 연동 클라이언트.
+"""공공데이터 연동 클라이언트(식품안전나라 OpenAPI + 공공데이터포털 data.go.kr REST).
 
-연동 surface는 식품안전나라 OpenAPI 한 가지로 표준화한다.
-  호출: {base}/{인증키}/{서비스ID}/json/{start}/{end}[/{조건키}={조건값}]
-  응답: { "<서비스ID>": {"RESULT":{"CODE","MSG"}, "total_count", "row":[{...}]} }
+두 가지 연동 surface를 지원하며, 조회별로 활성 백엔드를 자동 선택한다
+(우선순위: data.go.kr URL+키 → 식품안전나라 키+서비스ID → MOCK).
 
-- 인증키 + 서비스ID 가 설정되면 실제 호출, 아니면(또는 실패 시) 내장 MOCK 으로 폴백.
-- 응답 필드명은 데이터셋마다 다르므로, 후보 키 목록으로 방어적으로 매핑한다.
+  (A) 식품안전나라 OpenAPI
+      호출: {base}/{인증키}/{서비스ID}/json/{start}/{end}[/{조건키}={조건값}]
+      응답: { "<서비스ID>": {"RESULT":{"CODE","MSG"}, "total_count", "row":[{...}]} }
+  (B) 공공데이터포털(data.go.kr) REST  ← 원료 등 권장 경로
+      호출: <엔드포인트 URL>?serviceKey=<키>&...&<조건키>=<값>
+      응답: items[]/data[]/row[] (응답 형태는 _extract_rows_datago 가 방어적으로 흡수)
+
+- 키/URL 미설정 또는 호출 실패 시 내장 MOCK 으로 폴백한다.
+- 응답 필드명은 데이터셋마다 다르므로, 후보 키 목록(_first)으로 방어적으로 매핑한다.
   (정확한 요청변수/출력필드는 각 데이터셋 명세에서 확인 후 후보 목록을 보정한다.)
 
 지원 조회:
@@ -43,6 +49,104 @@ def _call(service_id: str, conditions: dict[str, str] | None = None, rows: int =
     if code and code not in ("INFO-000",):
         return []
     return block.get("row", []) or []
+
+
+# ----------------------------------------------------------------------------
+# 공공데이터포털(data.go.kr) REST 호출 (옵션 B)
+#   - serviceKey 파라미터 인증. JSON 응답의 items[]/data[]/row[] 에서 row 추출.
+#   - 엔드포인트(URL)는 env로 주입(데이터셋마다 다름). 호스트로 요청규약을 구분:
+#       api.odcloud.kr     → page/perPage, 조건검색 cond[<필드>::LIKE]=<값>
+#       그 외(apis.data.go.kr 등) → pageNo/numOfRows/type=json, <필드>=<값>
+# ----------------------------------------------------------------------------
+def _call_datago(url: str, query_field: str | None, term: str | None, rows: int = 5) -> list[dict]:
+    """data.go.kr REST 호출 → row 리스트. 실패 시 예외, 무자료 시 빈 리스트."""
+    import httpx
+
+    is_odcloud = "odcloud.kr" in url
+    params: dict[str, str] = {"serviceKey": settings.data_go_kr_api_key or ""}
+    if is_odcloud:
+        params.update({"page": "1", "perPage": str(rows), "returnType": "JSON"})
+        if query_field and term:
+            params[f"cond[{query_field}::LIKE]"] = term
+    else:
+        params.update({"pageNo": "1", "numOfRows": str(rows), "type": "json"})
+        if query_field and term:
+            params[query_field] = term
+    resp = httpx.get(url, params=params, timeout=10.0)
+    resp.raise_for_status()
+    try:
+        data = resp.json()
+    except Exception:
+        return []
+    return _extract_rows_datago(data)
+
+
+def _extract_rows_datago(data: Any) -> list[dict]:
+    """data.go.kr 의 다양한 응답 형태에서 row 리스트를 방어적으로 추출."""
+    if isinstance(data, list):
+        return [r for r in data if isinstance(r, dict)]
+    if not isinstance(data, dict):
+        return []
+    # odcloud/일반: 최상위 data[] / items[] / row[] / list[]
+    for key in ("data", "items", "row", "list"):
+        v = data.get(key)
+        if isinstance(v, list) and (not v or isinstance(v[0], dict)):
+            return [r for r in v if isinstance(r, dict)]
+    # apis.data.go.kr 표준: {"response": {"body": {"items": {"item": [...]}}}}
+    body = data.get("response", {})
+    body = body.get("body", {}) if isinstance(body, dict) else {}
+    if isinstance(body, dict):
+        items = body.get("items", body.get("item"))
+        if isinstance(items, dict):
+            items = items.get("item", items)
+        if isinstance(items, dict):
+            return [items]
+        if isinstance(items, list):
+            return [r for r in items if isinstance(r, dict)]
+    return []
+
+
+# ----------------------------------------------------------------------------
+# 백엔드 선택 + 원시 조회 (셀프테스트/공개 조회 공용)
+#   우선순위: data.go.kr(URL+키) → 식품안전나라(키+서비스ID) → MOCK
+# ----------------------------------------------------------------------------
+_DATAGO = {
+    "ingredient": lambda: (settings.dg_ingredient_url, settings.dg_ingredient_qf),
+    "additive": lambda: (settings.dg_additive_url, settings.dg_additive_qf),
+    "pesticide": lambda: (settings.dg_pesticide_url, settings.dg_pesticide_qf),
+    "recall": lambda: (settings.dg_recall_url, settings.dg_recall_qf),
+}
+_FSK = {
+    "ingredient": lambda: (settings.svc_ingredient, settings.qf_ingredient),
+    "additive": lambda: (settings.svc_additive, settings.qf_additive),
+    "pesticide": lambda: (settings.svc_pesticide, settings.qf_pesticide),
+    "recall": lambda: (settings.svc_recall, settings.qf_recall),
+}
+
+
+def backend(service: str) -> str:
+    """해당 조회의 활성 백엔드: 'datago' | 'mfds' | 'mock'."""
+    if settings.force_mock:
+        return "mock"
+    url, _ = _DATAGO[service]()
+    if settings.data_go_kr_api_key and url:
+        return "datago"
+    svc, _ = _FSK[service]()
+    if settings.mfds_service_key and svc:
+        return "mfds"
+    return "mock"
+
+
+def raw_rows(service: str, term: str, rows: int = 5) -> list[dict]:
+    """활성 백엔드로 원시 row 리스트 반환(셀프테스트의 'raw row[0] fields' 표시·공개 조회 공용)."""
+    b = backend(service)
+    if b == "datago":
+        url, qf = _DATAGO[service]()
+        return _call_datago(url, qf, term, rows=rows)
+    if b == "mfds":
+        svc, qf = _FSK[service]()
+        return _call(svc, {qf: term}, rows=rows)
+    return []
 
 
 def _first(row: dict, candidates: list[str]) -> Any | None:
@@ -108,11 +212,11 @@ _MOCK_RECALL = {
 # ----------------------------------------------------------------------------
 def lookup_ingredient(name: str) -> dict:
     """수입식품 원료정보: 원료의 사용가능여부/제한/부위/조건."""
-    if settings.is_mock(settings.svc_ingredient):
+    if backend("ingredient") == "mock":
         return _mock_ingredient(name)
     try:
-        # 조건키(원료명 검색)는 settings.qf_ingredient(env)로 조정 가능. 기본 PRDLST_NM.
-        rows = _call(settings.svc_ingredient, {settings.qf_ingredient: name})
+        # 활성 백엔드(data.go.kr 또는 식품안전나라)로 원시 조회. 요청변수명은 env로 조정 가능.
+        rows = raw_rows("ingredient", name)
         if not rows:
             return {**_mock_ingredient(name), "source": "MFDS_API(무자료→MOCK)"}
         row = rows[0]
@@ -134,10 +238,10 @@ def lookup_ingredient(name: str) -> dict:
 
 def lookup_additive(name: str) -> dict:
     """식품첨가물 기준·규격: 사용기준 존재 여부(존재=사용가능, 단 한도 확인 필요)."""
-    if settings.is_mock(settings.svc_additive):
+    if backend("additive") == "mock":
         return _mock_additive(name)
     try:
-        rows = _call(settings.svc_additive, {settings.qf_additive: name})
+        rows = raw_rows("additive", name)
         if not rows:
             return {**_mock_additive(name), "source": "MFDS_API(무자료→MOCK)"}
         row = rows[0]
@@ -150,13 +254,11 @@ def lookup_additive(name: str) -> dict:
 
 def lookup_pesticide_mrl(pesticide: str, food: str | None = None) -> dict:
     """농약 잔류허용기준(MRL). 주로 농·축·수산 원료에 적용."""
-    if settings.is_mock(settings.svc_pesticide):
+    if backend("pesticide") == "mock":
         return {"found": False, "mrl": None, "source": "MOCK", "note": "MRL MOCK(미설정)"}
     try:
-        conds = {settings.qf_pesticide: pesticide}
-        if food:
-            conds["FOOD"] = food
-        rows = _call(settings.svc_pesticide, conds)
+        # food(식품명) 2차 조건은 응답 row 에서 후속 필터링(요청변수명은 명세마다 달라 생략).
+        rows = raw_rows("pesticide", pesticide)
         if not rows:
             return {"found": False, "mrl": None, "source": "MFDS_API(무자료)"}
         row = rows[0]
@@ -167,10 +269,10 @@ def lookup_pesticide_mrl(pesticide: str, food: str | None = None) -> dict:
 
 def check_recall(product_or_maker: str) -> dict:
     """수입식품/식품 회수·판매중지(부적합/회수) 이력 조회."""
-    if settings.is_mock(settings.svc_recall):
+    if backend("recall") == "mock":
         return _mock_recall(product_or_maker)
     try:
-        rows = _call(settings.svc_recall, {settings.qf_recall: product_or_maker})
+        rows = raw_rows("recall", product_or_maker)
         if not rows:
             return {"has_history": False, "reasons": [], "source": "MFDS_API"}
         reasons = [str(_first(r, ["RTRVL_RSON", "회수사유", "RECALL_REASON"]) or "사유미상") for r in rows]
