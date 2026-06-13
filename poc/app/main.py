@@ -26,6 +26,8 @@ app = FastAPI(
 class VerifyRequest(BaseModel):
     ingredient_text: str
     label_text: str = ""
+    product_name: str | None = None
+    manufacturer: str | None = None
 
 
 @app.get("/health")
@@ -41,7 +43,12 @@ def health() -> dict:
 @app.post("/verify", response_model=CaseResult)
 def verify(req: VerifyRequest) -> CaseResult:
     """룰 기반(결정적) 검증 — 기본 경로."""
-    return verify_case(ingredient_text=req.ingredient_text, label_text=req.label_text)
+    return verify_case(
+        ingredient_text=req.ingredient_text,
+        label_text=req.label_text,
+        product_name=req.product_name,
+        manufacturer=req.manufacturer,
+    )
 
 
 @app.post("/verify/agent")

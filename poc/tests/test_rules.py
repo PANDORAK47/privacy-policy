@@ -16,6 +16,7 @@ from app.schemas import (  # noqa: E402
     IngredientExtraction,
     IngredientFinding,
     IngredientUsability,
+    RecallFinding,
     Verdict,
 )
 
@@ -64,6 +65,19 @@ class TestVerdict(unittest.TestCase):
             _finding("마황", IngredientUsability.NOT_USABLE),
         ]
         result = rules.evaluate(_extraction(), findings, rules.check_label(FULL_LABEL))
+        self.assertEqual(result.verdict, Verdict.BLOCKED)
+
+    def test_recall_history_escalates_clean_to_review(self):
+        findings = [_finding("정제수", IngredientUsability.USABLE)]
+        recall = RecallFinding(query="X", has_history=True, reasons=["표시기준 위반(MOCK)"], source="MOCK")
+        result = rules.evaluate(_extraction(), findings, rules.check_label(FULL_LABEL), recall=recall)
+        self.assertEqual(result.verdict, Verdict.REVIEW)
+        self.assertGreater(result.risk_score, 0.0)
+
+    def test_recall_history_does_not_override_blocker(self):
+        findings = [_finding("마황", IngredientUsability.NOT_USABLE)]
+        recall = RecallFinding(query="X", has_history=True, reasons=["사유"], source="MOCK")
+        result = rules.evaluate(_extraction(), findings, rules.check_label(FULL_LABEL), recall=recall)
         self.assertEqual(result.verdict, Verdict.BLOCKED)
 
 

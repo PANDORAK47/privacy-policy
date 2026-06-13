@@ -11,6 +11,7 @@ from .schemas import (
     IngredientFinding,
     IngredientUsability,
     LabelFinding,
+    RecallFinding,
     Verdict,
 )
 
@@ -43,6 +44,7 @@ def evaluate(
     extraction: IngredientExtraction,
     ingredient_findings: list[IngredientFinding],
     label_findings: list[LabelFinding],
+    recall: RecallFinding | None = None,
 ) -> CaseResult:
     not_usable = [f for f in ingredient_findings if f.usability == IngredientUsability.NOT_USABLE]
     restricted = [f for f in ingredient_findings if f.usability == IngredientUsability.RESTRICTED]
@@ -78,10 +80,21 @@ def evaluate(
         verdict = Verdict.IMPORTABLE
         actions.append("결정적·조건부 위반 미발견 — 통관/검역 진행 검토 가능")
 
+    # 회수/부적합 이력 반영: 결정적 차단이 아니면 최소 '추가검토'로 상향, 리스크 가산.
+    if recall and recall.has_history:
+        risk = min(1.0, risk + 0.15)
+        actions.append("회수/부적합 이력 발견: " + "; ".join(recall.reasons or ["사유미상"]))
+        if verdict in (Verdict.IMPORTABLE, Verdict.CONDITIONAL):
+            verdict = Verdict.REVIEW
+
+    recall_note = ""
+    if recall and recall.has_history:
+        recall_note = f", 회수/부적합 이력 {len(recall.reasons)}건"
+
     summary = (
         f"[{verdict.value}] 원료 {len(ingredient_findings)}건 "
         f"(불가 {len(not_usable)} / 제한 {len(restricted)} / 미확인 {len(unknown)}), "
-        f"표시 누락 {len(missing_labels)}건, 리스크 {risk:.2f}."
+        f"표시 누락 {len(missing_labels)}건{recall_note}, 리스크 {risk:.2f}."
     )
 
     return CaseResult(
@@ -90,6 +103,7 @@ def evaluate(
         risk_score=round(risk, 3),
         ingredient_findings=ingredient_findings,
         label_findings=label_findings,
+        recall=recall,
         actions=actions,
         summary=summary,
     )

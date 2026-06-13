@@ -52,12 +52,20 @@ class LabelFinding(BaseModel):
     present: bool
 
 
+class RecallFinding(BaseModel):
+    query: str
+    has_history: bool
+    reasons: list[str] = []
+    source: str = "MOCK"
+
+
 class CaseResult(BaseModel):
     product_name: str
     verdict: Verdict
     risk_score: float = Field(ge=0.0, le=1.0)
     ingredient_findings: list[IngredientFinding]
     label_findings: list[LabelFinding]
+    recall: RecallFinding | None = None
     actions: list[str]
     summary: str
     disclaimer: str = (
