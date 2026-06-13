@@ -35,6 +35,25 @@ base = https://openapi.foodsafetykorea.go.kr/api
   `mfds_api.py`의 후보 키 목록(`_first(...)`)과 조건키를 명세에 맞춰 한 번 보정하면 된다.
   (현재는 흔한 후보명으로 방어적 매핑 + 무자료/오류 시 MOCK 폴백)
 
+## 실연동 마무리 런북 (키·egress 설정 후 1회)
+
+원격 실행 환경은 일회성이라 키·네트워크가 환경 설정에 따릅니다. 아래 3단계로 실연동을 완료합니다.
+
+1. **네트워크 egress 허용** — 환경의 네트워크 허용목록에 호스트 추가
+   (미추가 시 `Host not in allowlist` 403):
+   - `openapi.foodsafetykorea.go.kr` (필수)
+   - `api.anthropic.com` (Claude 추출/에이전트 사용 시)
+   - `apis.data.go.kr` / `api.odcloud.kr` (data.go.kr REST 직접 호출 시), `unipass.customs.go.kr` (관세청, 확장)
+   - 참고: <https://code.claude.com/docs/en/claude-code-on-the-web> (네트워크 설정)
+2. **키·서비스ID 등록** — `.env` 또는 환경 시크릿:
+   `MFDS_SERVICE_KEY`, `MFDS_INGREDIENT_SERVICE_ID`(+additive/pesticide/recall), (추출 시) `ANTHROPIC_API_KEY`
+3. **자가진단 → 필드 보정** — 실제 응답 필드명을 확인하고 1회 보정:
+   ```bash
+   cd poc && python scripts/api_selftest.py 정제수
+   # raw row[0] fields: [...]  ← 이 필드명에 맞게 app/mfds_api.py 의 _first(...) 후보 목록 또는
+   #                              env MFDS_*_QUERY_FIELD(요청변수명)를 조정
+   ```
+
 ## 빠른 시작
 
 ```bash

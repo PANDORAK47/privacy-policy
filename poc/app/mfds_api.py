@@ -111,8 +111,8 @@ def lookup_ingredient(name: str) -> dict:
     if settings.is_mock(settings.svc_ingredient):
         return _mock_ingredient(name)
     try:
-        # NOTE: 조건키(원료명 검색)는 데이터셋 명세로 확인 후 보정. (예: PRDLST_NM)
-        rows = _call(settings.svc_ingredient, {"PRDLST_NM": name})
+        # 조건키(원료명 검색)는 settings.qf_ingredient(env)로 조정 가능. 기본 PRDLST_NM.
+        rows = _call(settings.svc_ingredient, {settings.qf_ingredient: name})
         if not rows:
             return {**_mock_ingredient(name), "source": "MFDS_API(무자료→MOCK)"}
         row = rows[0]
@@ -137,7 +137,7 @@ def lookup_additive(name: str) -> dict:
     if settings.is_mock(settings.svc_additive):
         return _mock_additive(name)
     try:
-        rows = _call(settings.svc_additive, {"NM": name})
+        rows = _call(settings.svc_additive, {settings.qf_additive: name})
         if not rows:
             return {**_mock_additive(name), "source": "MFDS_API(무자료→MOCK)"}
         row = rows[0]
@@ -153,7 +153,7 @@ def lookup_pesticide_mrl(pesticide: str, food: str | None = None) -> dict:
     if settings.is_mock(settings.svc_pesticide):
         return {"found": False, "mrl": None, "source": "MOCK", "note": "MRL MOCK(미설정)"}
     try:
-        conds = {"PRES_NM": pesticide}
+        conds = {settings.qf_pesticide: pesticide}
         if food:
             conds["FOOD"] = food
         rows = _call(settings.svc_pesticide, conds)
@@ -170,7 +170,7 @@ def check_recall(product_or_maker: str) -> dict:
     if settings.is_mock(settings.svc_recall):
         return _mock_recall(product_or_maker)
     try:
-        rows = _call(settings.svc_recall, {"PRDLST_NM": product_or_maker})
+        rows = _call(settings.svc_recall, {settings.qf_recall: product_or_maker})
         if not rows:
             return {"has_history": False, "reasons": [], "source": "MFDS_API"}
         reasons = [str(_first(r, ["RTRVL_RSON", "회수사유", "RECALL_REASON"]) or "사유미상") for r in rows]

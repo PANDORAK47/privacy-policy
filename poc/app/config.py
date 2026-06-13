@@ -48,6 +48,12 @@ class Settings:
     svc_pesticide: str = os.getenv("MFDS_PESTICIDE_SERVICE_ID", "")
     svc_recall: str = os.getenv("MFDS_RECALL_SERVICE_ID", "")
 
+    # 검색 조건(요청변수)명 — 명세 확인 후 env로 보정 가능(코드수정 불필요).
+    qf_ingredient: str = os.getenv("MFDS_INGREDIENT_QUERY_FIELD", "PRDLST_NM")
+    qf_additive: str = os.getenv("MFDS_ADDITIVE_QUERY_FIELD", "NM")
+    qf_pesticide: str = os.getenv("MFDS_PESTICIDE_QUERY_FIELD", "PRES_NM")
+    qf_recall: str = os.getenv("MFDS_RECALL_QUERY_FIELD", "PRDLST_NM")
+
     @property
     def force_mock(self) -> bool:
         return _env_bool("USE_MOCK")
