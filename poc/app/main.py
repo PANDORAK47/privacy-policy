@@ -7,13 +7,18 @@
 
 from __future__ import annotations
 
+import os
+
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from .agent import verify_with_agent
 from .config import settings
 from .schemas import CaseResult
 from .verification import verify_case
+
+_UI_FILE = os.path.join(os.path.dirname(__file__), "static", "index.html")
 
 app = FastAPI(
     title="수입가능여부 검토 AI 컨설팅 — PoC",
@@ -30,13 +35,20 @@ class VerifyRequest(BaseModel):
     manufacturer: str | None = None
 
 
+@app.get("/", response_class=HTMLResponse)
+def ui() -> str:
+    """컨설턴트 워크벤치 UI."""
+    with open(_UI_FILE, encoding="utf-8") as f:
+        return f.read()
+
+
 @app.get("/health")
 def health() -> dict:
     return {
         "status": "ok",
         "model": settings.model,
         "extraction_mock": settings.extraction_mock,
-        "mfds_mock": settings.mfds_mock,
+        "mfds_mock": settings.force_mock or not settings.mfds_service_key,
     }
 
 

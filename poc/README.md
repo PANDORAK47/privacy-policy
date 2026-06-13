@@ -47,7 +47,13 @@ python -m pytest -q          # 또는: python tests/test_rules.py  (오프라인
 uvicorn app.main:app --reload
 ```
 
-## 호출 예시
+## 워크벤치 UI
+
+서버 실행 후 브라우저에서 **`http://localhost:8000/`** 접속 → 컨설턴트 워크벤치
+(제품명·제조사·성분표·라벨 입력 → 판정/리스크/원료표/표시 체크리스트/회수이력/보완액션 시각화,
+`샘플 채우기` 버튼 제공, 상단에 MOCK/실연동 배지 표시).
+
+## API 호출 예시
 
 ```bash
 curl -s localhost:8000/health

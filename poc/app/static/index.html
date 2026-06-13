@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>수입가능여부 사전검토 · 컨설턴트 워크벤치</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#ffffff; --muted:#64748b; --line:#e2e8f0;
+    --green:#16a34a; --amber:#d97706; --blue:#2563eb; --red:#dc2626; --ink:#0f172a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Malgun Gothic',sans-serif;
+       background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);color:var(--ink);min-height:100vh}
+  header{padding:20px 24px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  header h1{font-size:18px;margin:0;font-weight:700}
+  header .sub{font-size:12px;color:#cbd5e1;margin-top:4px}
+  .badge{font-size:12px;padding:4px 10px;border-radius:999px;background:#334155;color:#e2e8f0;border:1px solid #475569}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 16px 48px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border-radius:12px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .card h2{font-size:14px;margin:0 0 12px;color:#334155}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+  input,textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:13px;font-family:inherit}
+  textarea{resize:vertical;min-height:90px}
+  .row{display:flex;gap:10px}.row>div{flex:1}
+  .actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  button{border:0;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer}
+  .btn-primary{background:#2563eb;color:#fff}.btn-primary:hover{background:#1d4ed8}
+  .btn-ghost{background:#f1f5f9;color:#334155}.btn-ghost:hover{background:#e2e8f0}
+  .verdict{display:flex;align-items:center;gap:12px;padding:14px;border-radius:10px;color:#fff;font-weight:700;font-size:18px}
+  .v-수입가능{background:var(--green)} .v-조건부{background:var(--amber)} .v-추가검토{background:var(--blue)} .v-수입곤란{background:var(--red)}
+  .meter{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin:10px 0}
+  .meter>i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#eab308,#ef4444)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600}
+  .pill{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600}
+  .p-usable{background:#dcfce7;color:#166534}.p-restricted{background:#fef3c7;color:#92400e}
+  .p-not_usable{background:#fee2e2;color:#991b1b}.p-unknown{background:#e0e7ff;color:#3730a3}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--line)}
+  .chip.ok{background:#f0fdf4;border-color:#bbf7d0;color:#166534}
+  .chip.miss{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+  ul.actions-list{margin:8px 0 0;padding-left:18px;font-size:13px}ul.actions-list li{margin:4px 0}
+  .muted{color:var(--muted);font-size:12px}
+  .disclaimer{margin-top:14px;font-size:11.5px;color:var(--muted);background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:10px}
+  .empty{color:#94a3b8;font-size:13px;text-align:center;padding:30px 0}
+  .err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:8px;padding:10px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🔎 수입가능여부 사전검토 · 컨설턴트 워크벤치</h1>
+    <div class="sub">성분표·한글표시 검증 → 4단계 판정 (AI 보조 / 최종 판단·책임은 컨설턴트)</div>
+  </div>
+  <span class="badge" id="modeBadge">상태 확인 중…</span>
+</header>
+
+<div class="wrap">
+  <div class="grid">
+    <!-- 입력 -->
+    <section class="card">
+      <h2>① 서류 입력</h2>
+      <div class="row">
+        <div><label>제품명</label><input id="product_name" placeholder="예: 에너지 음료" /></div>
+        <div><label>제조사(해외제조업소)</label><input id="manufacturer" placeholder="예: ACME Foods Co." /></div>
+      </div>
+      <label>성분표 (원료/배합비율, 한 줄에 하나)</label>
+      <textarea id="ingredient_text" placeholder="Purified Water 60%&#10;Sugar 25%&#10;Caffeine 0.5%"></textarea>
+      <label>한글표시(라벨) 텍스트</label>
+      <textarea id="label_text" placeholder="제품명/식품유형/영업소/유통기한/내용량/원재료명/영양성분/보관방법/주의사항 …"></textarea>
+      <div class="actions">
+        <button class="btn-primary" id="run">검증 실행</button>
+        <button class="btn-ghost" id="sample">샘플 채우기</button>
+        <button class="btn-ghost" id="clear">비우기</button>
+      </div>
+    </section>
+
+    <!-- 결과 -->
+    <section class="card">
+      <h2>② 검토 결과</h2>
+      <div id="result"><div class="empty">왼쪽에 서류를 입력하고 <b>검증 실행</b>을 누르세요.</div></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const SAMPLE = {
+  product_name:"에너지 음료", manufacturer:"ACME Foods Co., Ltd.",
+  ingredient_text:"Purified Water 60%\nSugar 25%\nCaffeine 0.5%\nNatural Flavor 1%\nCitric Acid 0.3%",
+  label_text:"제품명: 에너지 음료 / 식품유형: 액상차 / 영업소: 천일수입판매(주), 경기 평택 / 유통기한: 별도표기 / 내용량: 250ml / 원재료명: 정제수, 설탕, 카페인, 향료, 구연산 / 보관방법: 직사광선을 피해 보관"
+};
+const $ = id => document.getElementById(id);
+const esc = s => (s==null?"":String(s)).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+async function health(){
+  try{
+    const h = await (await fetch('/health')).json();
+    const mock = h.extraction_mock || h.mfds_mock;
+    $('modeBadge').textContent = (mock ? "MOCK 모드" : "실연동") + " · " + h.model;
+    $('modeBadge').style.background = mock ? "#475569" : "#166534";
+  }catch(e){ $('modeBadge').textContent = "서버 미연결"; }
+}
+
+function verdictClass(v){ return "v-" + (v||"").replace(/\(.*$/,""); }
+
+function render(r){
+  if(r.error){ $('result').innerHTML = '<div class="err">'+esc(r.error)+'</div>'; return; }
+  const pct = Math.round((r.risk_score||0)*100);
+  const ing = (r.ingredient_findings||[]).map(f=>`
+    <tr><td>${esc(f.name)}</td>
+        <td><span class="pill p-${f.usability}">${esc(f.usability)}</span></td>
+        <td>${esc(f.restriction||f.conditions||"-")}</td>
+        <td class="muted">${esc(f.source)}</td></tr>`).join("");
+  const labels = (r.label_findings||[]).map(l=>`<span class="chip ${l.present?'ok':'miss'}">${l.present?'✓':'✗'} ${esc(l.item)}</span>`).join("");
+  const recall = r.recall && r.recall.has_history
+     ? `<p class="muted">⚠️ 회수/부적합 이력: ${esc((r.recall.reasons||[]).join("; "))} <span class="muted">(${esc(r.recall.source)})</span></p>`
+     : `<p class="muted">회수/부적합 이력: 없음</p>`;
+  const acts = (r.actions||[]).map(a=>`<li>${esc(a)}</li>`).join("");
+  $('result').innerHTML = `
+    <div class="verdict ${verdictClass(r.verdict)}"><span>${esc(r.verdict)}</span>
+      <span style="margin-left:auto;font-size:13px;font-weight:600">리스크 ${pct}%</span></div>
+    <div class="meter"><i style="width:${pct}%"></i></div>
+    <p class="muted">${esc(r.summary)}</p>
+    <h2 style="margin-top:14px">원료 검증</h2>
+    <table><thead><tr><th>원료</th><th>사용</th><th>제한/조건</th><th>근거</th></tr></thead><tbody>${ing||'<tr><td colspan=4 class=muted>-</td></tr>'}</tbody></table>
+    <h2 style="margin-top:14px">한글표시 점검</h2><div class="chips">${labels}</div>
+    <h2 style="margin-top:14px">이력</h2>${recall}
+    <h2 style="margin-top:14px">보완 액션</h2><ul class="actions-list">${acts||'<li class=muted>-</li>'}</ul>
+    <div class="disclaimer">${esc(r.disclaimer||'본 결과는 AI 보조 사전 스크리닝이며, 최종 판단·책임은 컨설턴트에게 있습니다.')}</div>`;
+}
+
+$('run').onclick = async ()=>{
+  $('result').innerHTML = '<div class="empty">검증 중…</div>';
+  try{
+    const body = {
+      product_name: $('product_name').value || null,
+      manufacturer: $('manufacturer').value || null,
+      ingredient_text: $('ingredient_text').value,
+      label_text: $('label_text').value
+    };
+    const res = await fetch('/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    render(await res.json());
+  }catch(e){ render({error:'요청 실패: '+e.message}); }
+};
+$('sample').onclick = ()=>{ for(const k in SAMPLE) $(k).value = SAMPLE[k]; };
+$('clear').onclick = ()=>{ ['product_name','manufacturer','ingredient_text','label_text'].forEach(k=>$(k).value=''); $('result').innerHTML='<div class="empty">입력 후 검증 실행을 누르세요.</div>'; };
+health();
+</script>
+</body>
+</html>
